@@ -2,10 +2,23 @@
  * @type {Sprite}
  */
 let PlayerSprite;
-
 let PlayerIdle, PlayerRun;
-let Floors, Walls;
-let Fireballs, FireballAni;
+/**
+ * @type {Group}
+ */
+let Floors;
+/**
+ * @type {Group}
+ */
+let Walls;
+/**
+ * @type {Group}
+ */
+let Fireballs;
+let FireballAni;
+/**
+ * @type {Sprite}
+ */
 let Skull;
 
 let Scale = 1;
@@ -458,6 +471,7 @@ function PlayerSetup(New){
 function setup() {
     new Canvas(450,300, 'pixelated');
     world.gravity.y = 40;
+    //world.velocityThreshold = 0.75;
 
     PlayerSprite.w = 20;
     PlayerSprite.h = 39;
@@ -541,6 +555,8 @@ function Player_Retry(){
     Buttons.removeAll()
    
     Skull.collider = 'n'
+    Skull.rotationSpeed = 0;
+    Skull.rotation = 0;
     TutorialSetup()
     StartGem.visible = true
     Shine1.visible = true
@@ -720,8 +736,10 @@ function draw() {
         JumpSound.play()
 
         PlayerSprite.changeAni('jump').then(function(){
-            Jumping = true 
-            PlayerSprite.changeAni('fall')
+            if (Dead == false){
+                Jumping = true 
+                PlayerSprite.changeAni('fall')
+            }
         })
     }
 
