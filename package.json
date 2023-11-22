@@ -1,0 +1,20 @@
+{
+	"name": "skull-knight",
+	"version": "1.0.0",
+	"description": "Skull Knight",
+	"main": "skullKnight.js",
+	"scripts": {
+		"v": "npm version patch --force",
+		"V": "npm version minor --force",
+		"version": "git add -A",
+		"postversion": "git push"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@types/p5": "^1.7.3",
+		"p5": "^1.8.0",
+		"p5play": "^3.16.4",
+		"q5": "^1.5.3"
+	}
+}
