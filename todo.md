@@ -1,23 +1,22 @@
- - Tutorial
-  - walking
-    - make the player walk to retrive an item or some other quick way to start the first round of enemies
-  - running
-    - lasers require players to run
-  - jumping
-    - icles require players to jump
-  - shooting
-    - bats require players to shoot
-  - rolling
-    - have a small entrance to another area that players must roll thorugh
-    - have an enemy type that players can't jump over or shoot (either to evade or hurt it)
+# TODO
 
-// make text that shows users which buttons to press
+- [x] Tutorial
+- [x] add a favicon, used in the browser tab and bookmarks bar
+- [x] let the player restart the game (without reloading the page)
+- [x] show player the roll input tutorial text before the super laser so they have time to read it
+- [x] player retry needs to reset progression
+- [x] bigger gap between the first two icles shot at player, you can have smaller gaps to increase difficulty
+- [x] bat's colliders should be bigger, hitting wing should at least push them back if not kill them 
+- [ ] surrival games give players a sesnse of progression
+  - waves of enemies (rounds) 
+  - powerups (different attacks, armor)
+  - change of setting (change areas)
+  - different enemies
 
  round 1: lasers (3 times) (very short rounds)
  round 2: icles (4 icles)
 
 break: change rooms and require the player shoot something to progress
-(could be a door with a weight attached, shooting the rope makes the door go up)
 (shooting through a door)
 
  round 3: bats (3 bats)
@@ -25,16 +24,5 @@ break: change rooms and require the player shoot something to progress
  round 5: combine (greater intensity)
  etc.
  
- - let the player restart the game (without reloading the page)
-
- - surrival games give players a sesnse of progression
-   - waves of enemies (rounds) 
-   - powerups (different attacks, armor)
-   - change of setting (change areas)
-   - different enemies
-
-# TODO
-
-- [X] Tutorial
-- [ ] add a favicon, used in the browser tab and bookmarks bar
+- [ ] try using a 8-bit or 16 bit font that can look more clear without increasing font size
 - [ ] Add screenshots and describe the game in README.md

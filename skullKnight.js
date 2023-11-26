@@ -26,9 +26,10 @@ let Scale2 = 0.65;
 
 let TimerText;   
 
+let gPlayerSprite;
 let Lasers, Ices, Bats;
 let Laser;
-
+let Torches
 let StartGem, GemShines, ShineAnim, Shine1;
 let GemSound;
 
@@ -133,6 +134,24 @@ function preload() {
 		175,
 		Decors.w,
 		Decors.h
+	);
+
+    Torches = new Group();
+	Torches.w = 32;
+	Torches.h = 32;
+    Torches.collider = 'n'
+	Torches.tile = 't';
+
+    TorchAnim = loadAnimation('Images/Map/torchsheet.png', { frameSize: [16, 32], frames: 4 , frameDelay: 6});  
+
+	let tilesGroup7 = new Tiles(
+		[
+            't........t........t........t'
+		],
+		-270,
+		165,
+		Torches.w,
+		Torches.h
 	);
 
     let EmptyTiles = new Group();
@@ -243,6 +262,7 @@ function preload() {
     //Player Sprite
     gPlayerSprite = new Group();
     gPlayerSprite.x = -515;
+    //gPlayerSprite.debug = true
     gPlayerSprite.y = 225;
 	gPlayerSprite.scale = Scale;
     gPlayerSprite.friction = 0;
@@ -264,7 +284,7 @@ function preload() {
     Fireballs = new Group();
     //Fireballs.debug = true
 	Fireballs.collider = 'k'
-    Fireballs.diameter = 4                            
+    Fireballs.diameter = 7                            
     Fireballs.scale = 1.25
     
     Fireballs.overlaps(PlayerSprite)
@@ -457,10 +477,14 @@ function PlayerSetup(New){
         PlayerSprite.changeAni('idle');
     } else{
         Dead = false
+        Busy = false
         Game_Start = false
         MusicPlaying = false
         MusicIntroDone = false
-
+        RoundPhrase = 0
+        TextCheck = 0
+        RoundDelay = 1
+        TimerText.text = '0.0s';
         PlayerSprite.x = gPlayerSprite.x
         PlayerSprite.y = gPlayerSprite.y
         PlayerSprite.scale = Scale
@@ -471,10 +495,14 @@ function PlayerSetup(New){
 function setup() {
     new Canvas(450,300, 'pixelated');
     world.gravity.y = 40;
-    //world.velocityThreshold = 0.75;
+    world.velocityThreshold = 0.75;
 
     PlayerSprite.w = 20;
     PlayerSprite.h = 39;
+
+    for (let i = 1; i <= Torches.length; i++) {
+        Torches[i-1].addAnimation("TorchAnim", TorchAnim);
+    }
 }
 
 function playMusic(command){
@@ -505,7 +533,7 @@ let CurrentFrame;
 let LaserActivate = false;
 
 let Timer = 0
-let RoundDelay = 80;
+let RoundDelay = 1;
 let iFrame = false;
 
 let done = false;
@@ -538,7 +566,7 @@ function Player_Die(){
         PlayerSprite.vel.y = 0
         Game_Start = false
     
-        Skull.collider = 'd'
+        Skull.collider = 'd';
     
         PlayerSprite.changeAni('death').then(function(){
             PlayerSprite.animation.frame = 9
@@ -553,7 +581,7 @@ function Player_Retry(){
     PlayerSetup(false)
     TutorialTexts.removeAll()
     Buttons.removeAll()
-   
+
     Skull.collider = 'n'
     Skull.rotationSpeed = 0;
     Skull.rotation = 0;
@@ -580,11 +608,6 @@ function draw() {
 
     camera.y = 175;
 
-    // Retry Button
-    if (Dead == true && contro.presses('b')){
-        Player_Retry()
-    } 
-
     //Tutorial Text Update
     if (RoundPhrase == 1){
         if (TextCheck != RoundPhrase){
@@ -592,7 +615,7 @@ function draw() {
             Round1Text = new TutorialTexts.Sprite();
             Round1Text.x = 18
             Round1Text.text = 'Avoid the Lasers';       
-    
+
             LAButton = new Buttons.Sprite()
             LAButton.x = 18
             LAButton.addAnimation("LAAnim", LA_Anim);
@@ -639,7 +662,7 @@ function draw() {
             R1Button.moveTowards(PlayerSprite.x + 10, R1Button.y, .2)
             RAButton.moveTowards(PlayerSprite.x - 10, R1Button.y, .2)
         }
-    } else if(RoundPhrase == 4){
+    } else if(RoundPhrase == 4 || RoundPhrase == 5){
         if (TextCheck != RoundPhrase){
             TutorialTexts.removeAll()
             Buttons.removeAll()
@@ -647,8 +670,8 @@ function draw() {
            
             Round4Text = new TutorialTexts.Sprite();
             Round4Text.x = 18
-            Round4Text.text = 'Roll!';    
-    
+            Round4Text.text = 'Roll!';               
+
             R2Button = new Buttons.Sprite()
             R2Button.x = 18
             R2Button.addAnimation("R2Anim", R2_Anim);
@@ -656,8 +679,10 @@ function draw() {
             Round4Text.moveTowards(PlayerSprite.x, Round4Text.y, .2)
             R2Button.moveTowards(PlayerSprite.x, R2Button.y, .2)
         }
-    } else if(RoundPhrase == 5 && TextCheck != RoundPhrase){
+    } else if(RoundPhrase == 6 && TextCheck != RoundPhrase){
         TextCheck = RoundPhrase
+        Round4Text.remove()
+        R2Button.remove()
     }
 
 
@@ -680,7 +705,7 @@ function draw() {
             Running = true;
             PlrDirection = 'Left';
     
-            PlayerSprite.vel.x = -PlayerSpeed; 
+            PlayerSprite.vel.x = -PlayerSpeed * -contro.leftStick.x; 
          } else if (0.2 <= contro.leftStick.x && contro.leftStick.x <= 1) { 
             PlayerSprite.anis.scale.x = Scale;
             Skull.scale.x = Scale2;
@@ -689,7 +714,7 @@ function draw() {
             Running = true;
             PlrDirection = 'Right';
             
-            PlayerSprite.vel.x = PlayerSpeed;     
+            PlayerSprite.vel.x = PlayerSpeed * contro.leftStick.x;      
          } else {
               Running = false;
                PlayerSprite.vel.x = 0;
@@ -720,12 +745,13 @@ function draw() {
     // Roll
     if (contro.presses('rt') && Busy == false && Dead == false){
         Busy = true
-        PlayerSprite.move(2, PlrDirection, 10);
+        PlayerSprite.direction = PlrDirection;
+        PlayerSprite.speed = 9;
         iFrame = true
         RollSound.play()
         PlayerSprite.changeAni('roll').then(function(){
-        Busy = false
-        iFrame = false
+            Busy = false
+            iFrame = false
         })
     }
 
@@ -770,7 +796,7 @@ function draw() {
     }
 
     // Game Start
-    if (contro.presses('b') && Game_Start == false && PlayerSprite.overlapping(StartGem)){
+    if (contro.presses('b') && Game_Start == false && PlayerSprite.overlapping(StartGem) && Dead == false){
         Game_Start = true
         TutorialTexts.removeAll()
         Buttons.removeAll()
@@ -787,33 +813,56 @@ function draw() {
         StartFrame.visible = false
     }
 
-    if (Game_Start == true && frameCount % RoundDelay == 0) {
+        // Retry Button
+        if (Dead == true && contro.presses('b')){
+            Player_Retry()
+        } 
 
-        if ((frameCount - StartFrame.x) < 240){ // Tutorial Laser
+    // Round Loops
+    if (Game_Start == true) {    
+        if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 240){ // Tutorial Laser
             RoundPhrase = 1
-            doLasers(round(random(1,2)))       
-        } else if ((frameCount - StartFrame.x) < 480){ // Tutorial Ice
+            RoundDelay = 80
+            doLasers(5, PlayerSprite.x)       
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 480){ // Tutorial Ice
             RoundPhrase = 2
-            RoundDelay = 60                     
+            RoundDelay = 120                     
             doIce()       
-        } else if ((frameCount - StartFrame.x) < 960){ // Tutorial Bat
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 960){ // Tutorial Bat
             RoundPhrase = 3
-            RoundDelay = 300  
-            doBatR() 
-            doBatL()       
-        } else if ((frameCount - StartFrame.x) < 1200){ // Tutorial Roll
-            RoundPhrase = 4
             RoundDelay = 200  
-            doLasers(5) 
+            doBatR()     
+      
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 1200){ // Tutorial Roll
+            RoundPhrase = 4
+            RoundDelay = 1  
 
-        } else{ // Real Round
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 1440){ // Roll Test
             RoundPhrase = 5
+            doLasers(6) 
+            RoundDelay = 120  
+          
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 2700){ // Real Round
+            RoundPhrase = 6
             RoundDelay = 200
             doBatL()
             doBatR()
 
             if (round(random(1,2)) == 1){
-                doLasers(round(random(1,4)))        
+                doLasers(round(random(1,5)), PlayerSprite.x)        
+            }
+                
+            doIce()
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 3300){ // Super Laser Round
+            RoundDelay = 120
+            doLasers(6) 
+        } else if ((frameCount - StartFrame.x) % RoundDelay == 0){ // Intense Round
+            RoundDelay = 120
+            doBatL()
+            doBatR()
+
+            if (round(random(1,2)) == 1){
+                doLasers(round(random(1,5)), PlayerSprite.x)            
             }
                 
             doIce()
@@ -871,7 +920,7 @@ function draw() {
     TimerText.draw();
 }
 
-function doLasers(preset){
+function doLasers(preset, pos){
     let OriginPos = -600;
     let PosVar = 100;
     let Amount = 11;
@@ -888,10 +937,17 @@ function doLasers(preset){
     OriginPos = 225;
     PosVar = 50
     Amount = 6
-    } else if (preset == 5){
+    } else if (preset == 6){
         OriginPos = -560;
         PosVar = 25
         Amount = 44
+
+        Bats.removeAll()
+        Ices.removeAll()
+    }  else if (preset == 5){
+        OriginPos = pos-50;
+        PosVar = 20
+        Amount = 4
     }
 
    LaserActivate = false;
@@ -900,7 +956,7 @@ function doLasers(preset){
    for (let i = 0; i < Amount; i++) {
     let Laser = new Lasers.Sprite()
     Laser.addAnimation("LaserCharge", LaserChargeAnim);
-    Laser.x = OriginPos + Lasers.length*PosVar
+    Laser.x = OriginPos + (i+1)*PosVar
     
     Laser.animation.play().then(function(){                
         Laser.addAnimation("LaserAnim", LaserAnim);

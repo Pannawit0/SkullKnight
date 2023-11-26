@@ -1,6 +1,6 @@
 {
 	"name": "skull-knight",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Skull Knight",
 	"main": "skullKnight.js",
 	"scripts": {
@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@types/p5": "^1.7.3",
 		"p5": "^1.8.0",
-		"p5play": "^3.16.4",
-		"q5": "^1.5.3"
+		"p5play": "^3.17.6",
+		"q5": "^1.8.5"
 	}
 }
