@@ -25,11 +25,13 @@ let Scale = 1;
 let Scale2 = 0.65;
 
 let TimerText;   
+let Paused = false;
+let PauseButton;
 
 let gPlayerSprite;
 let Lasers, Ices, Bats;
 let Laser;
-let Torches
+let Torches;
 let StartGem, GemShines, ShineAnim, Shine1;
 let GemSound;
 
@@ -41,6 +43,10 @@ let TutorialTexts, TextCheck;
 
 let Round1Text, Round2Text, Round3Text, Round4Text, XButton, R1Button, LAButton, R2Button, OButton, RAButton;
 let Buttons, RetryButton;
+
+let PauseOverlay, PauseFrameStart, PauseFrameEnd, PauseFrameCount, PauseButtonText, PauseText, PauseText2;
+
+let FrameSinceStart;
 
 //PS Button
 let X_Anim, O_Anim;
@@ -61,6 +67,32 @@ function preload() {
     PlayerAni = loadAnimation('Images/PlayerSheet.png');
 
     // Level Stuff
+    let Sky = new Sprite(15, 150, 426, 384, 'n');
+    Sky.image = 'Images/Map/sky_tile.png'
+
+    let Mountain1 = new Sprite(15, 200, 426, 384, 'n');
+    Mountain1.image = 'Images/Map/mountain1.png'
+
+    let Mountain2 = new Sprite(15, 175, 426, 384, 'n');
+    Mountain2.image = 'Images/Map/mountain2.png'
+
+    let RailingTiles = new Group();
+	RailingTiles.w = 80;
+	RailingTiles.h = 51;
+    RailingTiles.collider = 'n'
+    RailingTiles.image = 'Images/Map/railing_tile.png'
+	RailingTiles.tile = 'r';
+
+	let tilesGroup8 = new Tiles(
+		[
+            'rrrrrrrr',           
+		],
+		-210,
+		234,
+		RailingTiles.w - 1,
+		RailingTiles.h
+	);
+
     let BGTiles = new Group();
 	BGTiles.w = 144;
 	BGTiles.h = 112;
@@ -70,10 +102,10 @@ function preload() {
 
 	let tilesGroup2 = new Tiles(
 		[
-		'/////////////////',
-        '/////////////////',
-        '/////////////////',
-        '/////////////////',
+		'////...///',
+        '////...///',
+        '////...///',
+        '////...///',
 		],
 		-700,
 		32,
@@ -90,10 +122,10 @@ function preload() {
 
 	let tilesGroup4 = new Tiles(
 		[
-        'p........p........p........p........p........p........p........p',
-        'p........p........p........p........p........p........p........p',
-        'p........p........p........p........p........p........p........p',
-        'p........p........p........p........p........p........p........p',
+        'p........p........p..........................p........p........p',
+        'p........p........p..........................p........p........p',
+        'p........p........p..........................p........p........p',
+        'p........p........p..........................p........p........p',
 		],
 		-485,
 		0,
@@ -101,6 +133,24 @@ function preload() {
 		Pillars.h-1
 	);
 
+    let Pillar2Tiles = new Group();
+	Pillar2Tiles.w = 32;
+	Pillar2Tiles.h = 313;
+    Pillar2Tiles.collider = 'n'
+    Pillar2Tiles.scale = 0.8
+    Pillar2Tiles.image = 'Images/Map/pillar2_tile.png'
+	Pillar2Tiles.tile = 'h';
+
+	let tilesGroup9 = new Tiles(
+		[
+            'h...h.....h...h',           
+		],
+		-200,
+		135,
+		Pillar2Tiles.w - 1,
+		Pillar2Tiles.h
+	);
+    
     let Windows = new Group();
 	Windows.w = 32;
 	Windows.h = 41;
@@ -111,7 +161,7 @@ function preload() {
 
 	let tilesGroup5 = new Tiles(
 		[
-            'w........w........w........w'
+            'w..........................w'
 		],
 		-415,
 		175,
@@ -128,7 +178,7 @@ function preload() {
 
 	let tilesGroup6 = new Tiles(
 		[
-            'd........d........d........d'
+            'd..........................d'
 		],
 		-270,
 		175,
@@ -146,7 +196,7 @@ function preload() {
 
 	let tilesGroup7 = new Tiles(
 		[
-            't........t........t........t'
+            't..........................t'
 		],
 		-270,
 		165,
@@ -181,14 +231,14 @@ function preload() {
 		EmptyTiles.h
 	);
 
-    let Curtain1 = new Sprite(150,65, 100, 'n')
+    let Curtain1 = new Sprite(100,64, 100, 'n')
     Curtain1.image = 'Images/Map/curtain1.png'
 
-    let Curtain1_1 = new Sprite(-400,65, 100, 'n')
+    let Curtain1_1 = new Sprite(-240,64, 100, 'n')
     Curtain1_1.image = 'Images/Map/curtain1.png'
     Curtain1_1.scale.x = -1
 
-    let Curtain2 = new Sprite(75,65, 100, 'n')
+    let Curtain2 = new Sprite(-55,64, 100, 'n')
     Curtain2.image = 'Images/Map/curtain2.png'
 
     let Decor1 = new Sprite(-300,235, 100, 'n')
@@ -223,7 +273,7 @@ function preload() {
     let Decor7 = new Sprite(-395,230, 100, 'n')
     Decor7.image = 'Images/Map/decor7.png'
 
-    let Decor8 = new Sprite(-100,38, 100, 'n')
+    let Decor8 = new Sprite(-95,38, 100, 'n')
     Decor8.image = 'Images/Map/decor8.png'
 
     let Decor9 = new Sprite(-545,38, 100, 'n')
@@ -397,6 +447,52 @@ function preload() {
 
     TutorialSetup()
 
+    // Pause Menu Preload
+    PauseOverlay = new Sprite(225, 150, 1, 'n')
+    PauseOverlay.image = 'Images/Menu/pauseoverlay.png'
+    PauseOverlay.debug = true
+
+    // Start/Pause frame storing
+    PauseFrameStart = new Sprite()
+    PauseFrameStart.x = 0
+    PauseFrameStart.collider = 'n'
+    PauseFrameStart.visible = false
+
+    PauseFrameEnd = new Sprite()
+    PauseFrameEnd.x = 0
+    PauseFrameEnd.collider = 'n'
+    PauseFrameEnd.visible = false
+
+    PauseFrameCount = new Sprite()
+    PauseFrameCount.x = 0
+    PauseFrameCount.collider = 'n'
+    PauseFrameCount.visible = false
+
+    StartFrame = new Sprite()
+    StartFrame.x = 0
+    StartFrame.collider = 'n'
+    StartFrame.visible = false
+
+    //Pause button
+    PauseButton = new Sprite(405,283,.1,.1, 'n');
+	PauseButton.image = 'Images/Menu/pausebutton.png';
+    //PauseButton.scale = 2;
+
+    PauseButtonText = new Sprite(427,286,.1,.1, 'n');
+	PauseButtonText.text = 'Pause';
+    PauseButtonText.textSize = 9
+	PauseButtonText.textColor = 'grey';
+
+    PauseText = new Sprite(225,80,.1,.1, 'n');
+	PauseText.text = "- Paused -";
+    PauseText.textSize = 15
+	PauseText.textColor = 'white';
+
+    PauseText2 = new Sprite(225,100,.1,.1, 'n');
+	PauseText2.text = "Press Start to Resume";
+    PauseText2.textSize = 12
+	PauseText2.textColor = 'grey';
+
     // Music
     MusicIntro = loadSound('Sounds/MusicIntro.wav');
     MusicLoop = loadSound('Sounds/MusicLoop.wav');
@@ -431,6 +527,10 @@ function preload() {
     //Gem SFX
     GemSound = loadSound('Sounds/Gem.wav');
     GemSound.setVolume(.5)
+
+    //Pause SFX
+    PausedSound = loadSound('Sounds/Paused.wav');
+    PausedSound.setVolume(.5)
 
     MusicFrame = new Sprite()
     MusicFrame.collider = 'n'
@@ -482,6 +582,9 @@ function PlayerSetup(New){
         MusicPlaying = false
         MusicIntroDone = false
         RoundPhrase = 0
+        FrameSinceStart = 0
+        PauseFrameCount.x = 0
+        StartFrame.x = frameCount
         TextCheck = 0
         RoundDelay = 1
         TimerText.text = '0.0s';
@@ -595,6 +698,7 @@ function draw() {
 
     camera.on();
 
+
     // Camera
     let Limit = 400
 
@@ -685,164 +789,191 @@ function draw() {
         R2Button.remove()
     }
 
-
-    if (Game_Start == true){
-        TimerText.text = round((frameCount - StartFrame.x)/60, 1)+'s'
-    }
-
     // Skull Movement
     if (Dead == false){
         Skull.moveTowards(PlayerSprite.x - 20, PlayerSprite.y - 25, .2)
     }
 
-    // Player Movement
-    if (Busy == false && Dead == false){
-        if (-1 <= contro.leftStick.x && contro.leftStick.x <= -0.2) {
-            PlayerSprite.anis.scale.x = -Scale;
-            Skull.scale.x = -Scale2;
-            PlayerSprite.changeAni('run');
-    
-            Running = true;
-            PlrDirection = 'Left';
-    
-            PlayerSprite.vel.x = -PlayerSpeed * -contro.leftStick.x; 
-         } else if (0.2 <= contro.leftStick.x && contro.leftStick.x <= 1) { 
-            PlayerSprite.anis.scale.x = Scale;
-            Skull.scale.x = Scale2;
-            PlayerSprite.changeAni('run');
-           
-            Running = true;
-            PlrDirection = 'Right';
-            
-            PlayerSprite.vel.x = PlayerSpeed * contro.leftStick.x;      
-         } else {
-              Running = false;
-               PlayerSprite.vel.x = 0;
-            PlayerSprite.changeAni('idle');
-        }
-   
-    } else if (Jumping == true && Dead == false) {
-        if (-1 <= contro.leftStick.x && contro.leftStick.x <= -0.2) {
-
-            PlayerSprite.anis.scale.x = -Scale;
-            Skull.scale.x = -Scale2;
-            PlrDirection = 'Left';
-    
-            PlayerSprite.vel.x = -(PlayerSpeed- 1); 
-        } else if (0.2 <= contro.leftStick.x && contro.leftStick.x <= 1 && Dead == false) {
-                
+    if (!Paused){
+        // Player Movement
+        if (Busy == false && Dead == false){
+            if (-1 <= contro.leftStick.x && contro.leftStick.x <= -0.2) {
+                PlayerSprite.anis.scale.x = -Scale;
+                Skull.scale.x = -Scale2;
+                PlayerSprite.changeAni('run');
+        
+                Running = true;
+                PlrDirection = 'Left';
+        
+                PlayerSprite.vel.x = -PlayerSpeed * -contro.leftStick.x; 
+             } else if (0.2 <= contro.leftStick.x && contro.leftStick.x <= 1) { 
                 PlayerSprite.anis.scale.x = Scale;
                 Skull.scale.x = Scale2;
-
+                PlayerSprite.changeAni('run');
+               
+                Running = true;
                 PlrDirection = 'Right';
                 
-                PlayerSprite.vel.x = PlayerSpeed - 1; 
-        } else {
-            PlayerSprite.vel.x = 0;
-        }
-    }
-    
-    // Roll
-    if (contro.presses('rt') && Busy == false && Dead == false){
-        Busy = true
-        PlayerSprite.direction = PlrDirection;
-        PlayerSprite.speed = 9;
-        iFrame = true
-        RollSound.play()
-        PlayerSprite.changeAni('roll').then(function(){
-            Busy = false
-            iFrame = false
-        })
-    }
-
-    // Jump
-    if (contro.presses('a') && Busy == false && Dead == false){
-        Busy = true
-        PlayerSprite.vel.y = -10;
-        JumpSound.play()
-
-        PlayerSprite.changeAni('jump').then(function(){
-            if (Dead == false){
-                Jumping = true 
-                PlayerSprite.changeAni('fall')
+                PlayerSprite.vel.x = PlayerSpeed * contro.leftStick.x;      
+             } else {
+                  Running = false;
+                   PlayerSprite.vel.x = 0;
+                PlayerSprite.changeAni('idle');
             }
-        })
-    }
-
-    // Landed
-    if (PlayerSprite.collides(Floors) && Jumping == true && Dead == false) {
-        Busy = false
-        Jumping = false
-        LandedSound.play()
-    }
-
-    // Shoot
-    if (contro.presses('r') && Dead == false){    
-        if (contro.rightStick.x > 0.2 || contro.rightStick.y > 0.2 || contro.rightStick.x < -0.2 || contro.rightStick.y < -0.2){
-            let Aim = new Sprite(PlayerSprite.x + contro.rightStick.x * 1000, PlayerSprite.y + contro.rightStick.y * 1000, 25, 'n');
-            Aim.visible = false
-
-            FireballSound.play()
-
-            let Fireball = new Fireballs.Sprite();
-            Fireball.addAnimation("Fireball", FireballAni);
-            Fireball.animation.play();
+       
+        } else if (Jumping == true && Dead == false) {
+            if (-1 <= contro.leftStick.x && contro.leftStick.x <= -0.2) {
     
-            Fireball.pos = Skull.pos
-
-            Fireball.moveTowards(Aim.x, Aim.y, FireballSpeed)
-            Fireball.rotateTo(Aim, 100, 0)
+                PlayerSprite.anis.scale.x = -Scale;
+                Skull.scale.x = -Scale2;
+                PlrDirection = 'Left';
+        
+                PlayerSprite.vel.x = -(PlayerSpeed- 1); 
+            } else if (0.2 <= contro.leftStick.x && contro.leftStick.x <= 1 && Dead == false) {
+                    
+                    PlayerSprite.anis.scale.x = Scale;
+                    Skull.scale.x = Scale2;
+    
+                    PlrDirection = 'Right';
+                    
+                    PlayerSprite.vel.x = PlayerSpeed - 1; 
+            } else {
+                PlayerSprite.vel.x = 0;
+            }
         }
-    }
-
-    // Game Start
-    if (contro.presses('b') && Game_Start == false && PlayerSprite.overlapping(StartGem) && Dead == false){
-        Game_Start = true
-        TutorialTexts.removeAll()
-        Buttons.removeAll()
-        StartGem.visible = false
-        Shine1.visible = false
-
-        GemSound.play()
-        playMusic('Intro')
-
-        // Store start frame
-        StartFrame = new Sprite()
-        StartFrame.x = frameCount
-        StartFrame.collider = 'n'
-        StartFrame.visible = false
-    }
+        
+        
+        // Roll
+        if (contro.presses('rt') && Busy == false && Dead == false){
+            Busy = true
+            PlayerSprite.direction = PlrDirection;
+            PlayerSprite.speed = 9;
+            iFrame = true
+            RollSound.play()
+            PlayerSprite.changeAni('roll').then(function(){
+                Busy = false
+                iFrame = false
+            })
+        }
+    
+        // Jump
+        if (contro.presses('a') && Busy == false && Dead == false){
+            Busy = true
+            PlayerSprite.vel.y = -10;
+            JumpSound.play()
+    
+            PlayerSprite.changeAni('jump').then(function(){
+                if (Dead == false){
+                    Jumping = true 
+                    PlayerSprite.changeAni('fall')
+                }
+            })
+        }
+    
+        // Landed
+        if (PlayerSprite.collides(Floors) && Jumping == true && Dead == false) {
+            Busy = false
+            Jumping = false
+            LandedSound.play()
+        }
+    
+        // Shoot
+        if (contro.presses('r') && Dead == false){    
+            if (contro.rightStick.x > 0.2 || contro.rightStick.y > 0.2 || contro.rightStick.x < -0.2 || contro.rightStick.y < -0.2){
+                let Aim = new Sprite(PlayerSprite.x + contro.rightStick.x * 1000, PlayerSprite.y + contro.rightStick.y * 1000, 25, 'n');
+                Aim.visible = false
+    
+                FireballSound.play()
+    
+                let Fireball = new Fireballs.Sprite();
+                Fireball.addAnimation("Fireball", FireballAni);
+                Fireball.animation.play();
+        
+                Fireball.pos = Skull.pos
+    
+                Fireball.moveTowards(Aim.x, Aim.y, FireballSpeed)
+                Fireball.rotateTo(Aim, 100, 0)
+            }
+        }
+    
+        // Game Start
+        if (contro.presses('b') && Game_Start == false && PlayerSprite.overlapping(StartGem) && Dead == false){
+            Game_Start = true
+            TutorialTexts.removeAll()
+            Buttons.removeAll()
+            StartGem.visible = false
+            Shine1.visible = false
+    
+            GemSound.play()
+            playMusic('Intro')
+    
+            // Store start frame
+            PauseFrameCount.x = 0
+            StartFrame.x = frameCount
+        }
 
         // Retry Button
         if (Dead == true && contro.presses('b')){
             Player_Retry()
         } 
+    }
+
+    // Frame Since Start Update
+    FrameSinceStart = frameCount - StartFrame.x - PauseFrameCount.x
+
+    if (Game_Start == true && !Paused){
+        TimerText.text = round(FrameSinceStart/60, 1)+'s'
+    }
+
+    // Pause input detect
+    if (contro.presses('start')) {
+        if (Paused == false){
+            world.autoStep = Paused;
+            allSprites.autoUpdate = Paused;
+            Paused = !Paused;
+            PauseFrameStart.x = frameCount
+            MusicIntro.setVolume(.02)
+            MusicLoop.setVolume(.02)
+            PausedSound.play()
+        } else{
+            world.autoStep = Paused;
+            allSprites.autoUpdate = Paused;
+            Paused = !Paused;
+            PauseFrameEnd.x = frameCount
+            MusicIntro.setVolume(.15)
+            MusicLoop.setVolume(.15)
+
+            PauseFrameCount.x = PauseFrameCount.x + abs(PauseFrameStart.x - PauseFrameEnd.x)
+            PauseFrameStart.x = 0
+            PauseFrameEnd.x = 0
+        }
+    }
 
     // Round Loops
-    if (Game_Start == true) {    
-        if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 240){ // Tutorial Laser
+    if (Game_Start == true && !Paused) {    
+        if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 240){ // Tutorial Laser
             RoundPhrase = 1
             RoundDelay = 80
             doLasers(5, PlayerSprite.x)       
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 480){ // Tutorial Ice
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 480 && FrameSinceStart >= 240){ // Tutorial Ice
             RoundPhrase = 2
             RoundDelay = 120                     
             doIce()       
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 960){ // Tutorial Bat
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 960 && FrameSinceStart >= 480){ // Tutorial Bat
             RoundPhrase = 3
-            RoundDelay = 200  
+            RoundDelay = 240  
             doBatR()     
       
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 1200){ // Tutorial Roll
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 1200 && FrameSinceStart >= 960){ // Tutorial Roll
             RoundPhrase = 4
             RoundDelay = 1  
 
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 1440){ // Roll Test
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 1440 && FrameSinceStart >= 1200){ // Roll Test
             RoundPhrase = 5
             doLasers(6) 
             RoundDelay = 120  
           
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 2700){ // Real Round
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 2700 && FrameSinceStart >= 1440){ // Real Round
             RoundPhrase = 6
             RoundDelay = 200
             doBatL()
@@ -853,10 +984,12 @@ function draw() {
             }
                 
             doIce()
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0 && (frameCount - StartFrame.x) < 3300){ // Super Laser Round
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 3000 && FrameSinceStart >= 2700){ // Break
+            RoundDelay = 120
+        } else if (FrameSinceStart % RoundDelay == 0 && FrameSinceStart < 3300 && FrameSinceStart >= 3000){ // Super Laser Round
             RoundDelay = 120
             doLasers(6) 
-        } else if ((frameCount - StartFrame.x) % RoundDelay == 0){ // Intense Round
+        } else if (FrameSinceStart % RoundDelay == 0){ // Intense Round
             RoundDelay = 120
             doBatL()
             doBatR()
@@ -871,7 +1004,14 @@ function draw() {
 
     // Laser Overlap Detection
     if (PlayerSprite.overlapping(Lasers) && LaserActivate == true & Dead == false) {
-        Player_Die()
+
+        for (let i = 0; i < Lasers.length; i++) {
+            if (PlayerSprite.overlapping(Lasers[i]) && Dead == false){
+                if (Lasers[i].ani.frame >= 1 && Lasers[i].ani.frame <= 4){
+                    Player_Die()
+                }                
+            }
+        }
     }
 
     // Ices Overlap Detection
@@ -886,25 +1026,27 @@ function draw() {
     }
 
     // Fireballs Overlap Detection
-    for (let i = 1; i <= Bats.length; i++) {
+    for (let i = 0; i < Bats.length; i++) {
 
-        Bats[i-1].moveTo(PlayerSprite.x, PlayerSprite.y - 10, BatSpeed)
+        Bats[i].moveTo(PlayerSprite.x, PlayerSprite.y - 10, BatSpeed)
 
-        if (Bats[i-1].x - PlayerSprite.x < 0){             
-            Bats[i-1].scale.x = -1;                      
+        if (Bats[i].x - PlayerSprite.x < 0){             
+            Bats[i].scale.x = -1;                      
         } else {
-            Bats[i-1].scale.x = 1;       
+            Bats[i].scale.x = 1;       
         }
 
-        if (Fireballs.overlaps(Bats[i-1])){
-            Bats[i-1].remove()
+        if (Fireballs.overlaps(Bats[i])){
+            Bats[i].remove()
         }                  
     }
 
-    if (frameCount % 20 == 0 && Running == true && Busy == false && Dead == false){
+    //Walk SFX
+    if (frameCount % 20 == 0 && Running == true && Busy == false && Dead == false && !Paused){
         Footstep.play()
     }
 
+    //Music
     if (MusicPlaying == true && Dead == false){
         if (MusicIntroDone == false && frameCount == MusicFrame.x + 261){
             playMusic('Loop')
@@ -913,11 +1055,25 @@ function draw() {
 
     // Skip drawing UI text by making it not visible here
     TimerText.visible = false;
+    PauseOverlay.visible = false;
+    PauseButton.visible = false;
+    PauseButtonText.visible = false;
+    PauseText.visible = false;
+    PauseText2.visible = false;
     allSprites.draw();
 
     // draw ui text
     camera.off();
     TimerText.draw();
+    PauseButton.draw();
+    PauseButtonText.draw();
+
+    if (Paused){
+        PauseOverlay.draw();
+        PauseOverlay.draw();
+        PauseText.draw();
+        PauseText2.draw();
+    }
 }
 
 function doLasers(preset, pos){
@@ -960,6 +1116,7 @@ function doLasers(preset, pos){
     
     Laser.animation.play().then(function(){                
         Laser.addAnimation("LaserAnim", LaserAnim);
+        //Laser.ani.frameDelay = 2;
         LaserActivate = true;
 
         Laser.animation.play().then(function(){

@@ -26,3 +26,7 @@ break: change rooms and require the player shoot something to progress
  
 - [ ] try using a 8-bit or 16 bit font that can look more clear without increasing font size
 - [ ] Add screenshots and describe the game in README.md
+
+- [ ] pause menu! make screen dark except for pause menu text (add stick sensitvity settings if you want)
+- [ ] add d-pad input option for controllers without sticks
+- [ ] add more jewels (have to get all jewels before leaving + defeat enemy rounds)
