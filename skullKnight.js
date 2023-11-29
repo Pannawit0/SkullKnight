@@ -46,6 +46,8 @@ let Buttons, RetryButton;
 
 let PauseOverlay, PauseFrameStart, PauseFrameEnd, PauseFrameCount, PauseButtonText, PauseText, PauseText2;
 
+let ScoreText, ScoreText2;
+let Score = 0;
 let FrameSinceStart;
 
 //PS Button
@@ -62,10 +64,13 @@ let LaserSpeed = 14;
 let IceSpeed = 3;
 let BatSpeed = 1;
 
+let bitPotionFont;
+
 function preload() {
    
     PlayerAni = loadAnimation('Images/PlayerSheet.png');
 
+    bitPotionFont = loadFont('BitPotionExt.ttf')
     // Level Stuff
     let Sky = new Sprite(15, 150, 426, 384, 'n');
     Sky.image = 'Images/Map/sky_tile.png'
@@ -178,7 +183,7 @@ function preload() {
 
 	let tilesGroup6 = new Tiles(
 		[
-            'd..........................d'
+            'd.................d'
 		],
 		-270,
 		175,
@@ -196,7 +201,7 @@ function preload() {
 
 	let tilesGroup7 = new Tiles(
 		[
-            't..........................t'
+            't.................t'
 		],
 		-270,
 		165,
@@ -231,15 +236,26 @@ function preload() {
 		EmptyTiles.h
 	);
 
-    let Curtain1 = new Sprite(100,64, 100, 'n')
+    let Curtain1 = new Sprite(85,42 , 100, 'n')
     Curtain1.image = 'Images/Map/curtain1.png'
 
-    let Curtain1_1 = new Sprite(-240,64, 100, 'n')
+    let Curtain1_1 = new Sprite(-35,42, 100, 'n')
     Curtain1_1.image = 'Images/Map/curtain1.png'
     Curtain1_1.scale.x = -1
 
-    let Curtain2 = new Sprite(-55,64, 100, 'n')
+    let Curtain1_2 = new Sprite(175,25, 100, 'n')
+    Curtain1_2.image = 'Images/Map/curtain1.png'
+    Curtain1_2.scale.x = -1
+
+    let Curtain1_3 = new Sprite(-165,64, 100, 'n')
+    Curtain1_3.image = 'Images/Map/curtain1.png'
+    Curtain1_3.scale.x = -1
+
+    let Curtain2 = new Sprite(-95,32, 100, 'n')
     Curtain2.image = 'Images/Map/curtain2.png'
+
+    let Curtain2_1 = new Sprite(225,64, 100, 'n')
+    Curtain2_1.image = 'Images/Map/curtain2.png'
 
     let Decor1 = new Sprite(-300,235, 100, 'n')
     Decor1.image = 'Images/Map/decor1.png'
@@ -273,11 +289,18 @@ function preload() {
     let Decor7 = new Sprite(-395,230, 100, 'n')
     Decor7.image = 'Images/Map/decor7.png'
 
-    let Decor8 = new Sprite(-95,38, 100, 'n')
+    let Decor8 = new Sprite(25,38, 100, 'n')
     Decor8.image = 'Images/Map/decor8.png'
 
     let Decor9 = new Sprite(-545,38, 100, 'n')
     Decor9.image = 'Images/Map/decor9.png'
+
+    let Decor9_1 = new Sprite(-175,38, 100, 'n')
+    Decor9_1.image = 'Images/Map/decor9.png'
+
+    let Decor9_2 = new Sprite(190,38, 100, 'n')
+    Decor9_2.image = 'Images/Map/decor9.png'
+    Decor9_2.scale.x = -1
 
     Floors = new Group();
 	Floors.w = 223;
@@ -407,10 +430,20 @@ function preload() {
      Bats.h = 6
      //Bats.life = 600
 
-    TimerText = new Sprite(20,10,.1,.1, 'n');
+    TimerText = new Sprite(22,22,.1,.1, 'n');
 	TimerText.text = '0.0s';
     TimerText.textSize = 10
-	TimerText.textColor = 'white';
+	TimerText.textColor = 'grey';
+
+    ScoreText = new Sprite(27,10,.1,.1, 'n');
+	ScoreText.text = 'Score:';
+    ScoreText.textSize = 10
+	ScoreText.textColor = 'white';
+
+    ScoreText2 = new Sprite(50,10,.1,.1, 'n');
+	ScoreText2.text = 0;
+    ScoreText2.textSize = 10
+	ScoreText2.textColor = 'white';
 
     StartGem = new Sprite(16, 235, 35,35, 'n')
     StartGem.image = 'Images/Gem/Gem.png'
@@ -434,7 +467,7 @@ function preload() {
     R1_Anim = loadAnimation('Images/Buttons/PS/R1.png', { frameSize: [16, 16], frames: 4 , frameDelay: 4});  
     R2_Anim = loadAnimation('Images/Buttons/PS/R2.png', { frameSize: [16, 16], frames: 4 , frameDelay: 4});  
     LA_Anim = loadAnimation('Images/Buttons/PS/LA.png', { frameSize: [20, 20], frames: 4 , frameDelay: 15});  
-    RA_Anim = loadAnimation('Images/Buttons/PS/RA.png', { frameSize: [20, 20], frames: 8 , frameDelay: 8});  
+    RA_Anim = loadAnimation('Images/Buttons/PS/RA.png', { frameSize: [20, 22], frames: 8 , frameDelay: 8});  
 
     //Tutorial Text
     TutorialTexts = new Group()
@@ -545,11 +578,11 @@ function TutorialSetup(){
     WalkText.text = 'Use left analog stick to walk around.';
 
     let PickUpText = new TutorialTexts.Sprite();
-    PickUpText.x = 18
+    PickUpText.x = 16
     PickUpText.text = 'Pick Up';
 
     let OButton1 = new Buttons.Sprite()
-    OButton1.x = 18
+    OButton1.x = 16
     OButton1.addAnimation("OAnim", O_Anim);
 
     let LAButton1 = new Buttons.Sprite()
@@ -557,7 +590,10 @@ function TutorialSetup(){
     LAButton1.addAnimation("LAAnim", LA_Anim);
 }
 
-
+function collectGem(){
+    GemSound.play()
+    Score = Score + 10
+}
 
 function PlayerSetup(New){
     if (New == true){
@@ -587,6 +623,7 @@ function PlayerSetup(New){
         StartFrame.x = frameCount
         TextCheck = 0
         RoundDelay = 1
+        Score = 0;
         TimerText.text = '0.0s';
         PlayerSprite.x = gPlayerSprite.x
         PlayerSprite.y = gPlayerSprite.y
@@ -599,6 +636,8 @@ function setup() {
     new Canvas(450,300, 'pixelated');
     world.gravity.y = 40;
     world.velocityThreshold = 0.75;
+
+    //textFont(bitPotionFont);
 
     PlayerSprite.w = 20;
     PlayerSprite.h = 39;
@@ -711,6 +750,9 @@ function draw() {
     }
 
     camera.y = 175;
+
+    // Score Text Update
+    ScoreText2.text = Score
 
     //Tutorial Text Update
     if (RoundPhrase == 1){
@@ -904,9 +946,9 @@ function draw() {
             StartGem.visible = false
             Shine1.visible = false
     
-            GemSound.play()
             playMusic('Intro')
     
+            collectGem()
             // Store start frame
             PauseFrameCount.x = 0
             StartFrame.x = frameCount
@@ -1060,6 +1102,8 @@ function draw() {
     PauseButtonText.visible = false;
     PauseText.visible = false;
     PauseText2.visible = false;
+    ScoreText.visible = false;
+    ScoreText2.visible = false;
     allSprites.draw();
 
     // draw ui text
@@ -1067,6 +1111,8 @@ function draw() {
     TimerText.draw();
     PauseButton.draw();
     PauseButtonText.draw();
+    ScoreText.draw();
+    ScoreText2.draw();
 
     if (Paused){
         PauseOverlay.draw();
