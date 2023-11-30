@@ -32,7 +32,7 @@ let gPlayerSprite;
 let Lasers, Ices, Bats;
 let Laser;
 let Torches;
-let StartGem, GemShines, ShineAnim, Shine1;
+let StartGem, GemShines, ShineAnim, Shine1, Gems;
 let GemSound;
 
 let RoundPhrase;
@@ -46,8 +46,11 @@ let Buttons, RetryButton;
 
 let PauseOverlay, PauseFrameStart, PauseFrameEnd, PauseFrameCount, PauseButtonText, PauseText, PauseText2;
 
+let Arrows, ArrowL, ArrowR;
+
 let ScoreText, ScoreText2;
 let Score = 0;
+let GemCount = 0;
 let FrameSinceStart;
 
 //PS Button
@@ -65,8 +68,11 @@ let IceSpeed = 3;
 let BatSpeed = 1;
 
 let bitPotionFont;
+let onMac = false;
 
 function preload() {
+
+    onMac = p5play.os.platform == 'macOS';
    
     PlayerAni = loadAnimation('Images/PlayerSheet.png');
 
@@ -430,22 +436,38 @@ function preload() {
      Bats.h = 6
      //Bats.life = 600
 
-    TimerText = new Sprite(22,22,.1,.1, 'n');
+    TimerText = new Sprite(25,285,.1,.1, 'n');
 	TimerText.text = '0.0s';
-    TimerText.textSize = 10
+    if (!onMac) TimerText.textSize = 9
 	TimerText.textColor = 'grey';
 
     ScoreText = new Sprite(27,10,.1,.1, 'n');
 	ScoreText.text = 'Score:';
-    ScoreText.textSize = 10
+    if (!onMac) ScoreText.textSize = 9
 	ScoreText.textColor = 'white';
 
     ScoreText2 = new Sprite(50,10,.1,.1, 'n');
 	ScoreText2.text = 0;
-    ScoreText2.textSize = 10
+    if (!onMac) ScoreText2.textSize = 9
 	ScoreText2.textColor = 'white';
 
-    StartGem = new Sprite(16, 235, 35,35, 'n')
+    GemText = new Sprite(25,23,.1,.1, 'n');
+	GemText.image = 'Images/Gem/Gem.png'
+
+    GemText2 = new Sprite(50,25,.1,.1, 'n');
+	GemText2.text = 0;
+    if (!onMac) GemText2.textSize = 9
+	GemText2.textColor = 'white';
+
+    Gems = new Group()
+    Gems.y = 235
+    Gems.w = 35
+    Gems.h = 35
+    Gems.collider = 'n'
+    Gems.image = 'Images/Gem/Gem.png'
+
+    StartGem = new Gems.Sprite()
+    StartGem.x = 16
     StartGem.image = 'Images/Gem/Gem.png'
 
     GemShines = new Group();  
@@ -456,6 +478,19 @@ function preload() {
 
     Shine1 = new GemShines.Sprite()
     Shine1.addAnimation("ShineAnim", ShineAnim);
+
+    // Arrow Indicator 
+    Arrows = new Group(); 
+    Arrows.image = 'Images/Menu/arrow.png' 
+    Arrows.y = 210
+    Arrows.collider = 'n'
+
+    ArrowL = new Arrows.Sprite()
+    ArrowL.scale.x = -1
+    ArrowL.x = 25
+
+    ArrowR = new Arrows.Sprite()
+    ArrowR.x = 425
 
     //Button Prompts
     Buttons = new Group()
@@ -476,7 +511,7 @@ function preload() {
     TutorialTexts.y = 175
     TutorialTexts.collider = 'n'
     TutorialTexts.textColor = 'white';
-    TutorialTexts.textSize = 10
+    if (!onMac) TutorialTexts.textSize = 10
 
     TutorialSetup()
 
@@ -513,17 +548,18 @@ function preload() {
 
     PauseButtonText = new Sprite(427,286,.1,.1, 'n');
 	PauseButtonText.text = 'Pause';
-    PauseButtonText.textSize = 9
+    if (!onMac) PauseButtonText.textSize = 9
 	PauseButtonText.textColor = 'grey';
 
     PauseText = new Sprite(225,80,.1,.1, 'n');
 	PauseText.text = "- Paused -";
-    PauseText.textSize = 15
+    if (onMac) PauseText.textSize = 32
+    else PauseText.textSize = 15
 	PauseText.textColor = 'white';
 
     PauseText2 = new Sprite(225,100,.1,.1, 'n');
 	PauseText2.text = "Press Start to Resume";
-    PauseText2.textSize = 12
+    if (!onMac) PauseText2.textSize = 12
 	PauseText2.textColor = 'grey';
 
     // Music
@@ -579,7 +615,7 @@ function TutorialSetup(){
 
     let PickUpText = new TutorialTexts.Sprite();
     PickUpText.x = 16
-    PickUpText.text = 'Pick Up';
+    PickUpText.text = 'Collect to Start';
 
     let OButton1 = new Buttons.Sprite()
     OButton1.x = 16
@@ -590,9 +626,20 @@ function TutorialSetup(){
     LAButton1.addAnimation("LAAnim", LA_Anim);
 }
 
+function spawnGem(){
+    let Gem = new Gems.Sprite()
+    Gem.x = round(random(-400,400))
+    Gem.image = 'Images/Gem/Gem.png'
+
+    let Shine = new GemShines.Sprite()
+    Shine.addAnimation("ShineAnim", ShineAnim);
+    Shine.x = Gem.x + 5
+}
+
 function collectGem(){
     GemSound.play()
-    Score = Score + 10
+    Score = Score + 100
+    GemCount = GemCount + 1
 }
 
 function PlayerSetup(New){
@@ -624,11 +671,19 @@ function PlayerSetup(New){
         TextCheck = 0
         RoundDelay = 1
         Score = 0;
+        GemCount = 0;
         TimerText.text = '0.0s';
         PlayerSprite.x = gPlayerSprite.x
         PlayerSprite.y = gPlayerSprite.y
         PlayerSprite.scale = Scale
         PlayerSprite.changeAni('idle');
+
+        for (let i = 0; i < Gems.length; i++) {
+            if (Gems[i] != StartGem){
+                Gems[i].remove()
+                GemShines[i].remove()
+            }
+        }
     }  
 }
 
@@ -637,7 +692,10 @@ function setup() {
     world.gravity.y = 40;
     world.velocityThreshold = 0.75;
 
-    //textFont(bitPotionFont);
+    if (onMac) {
+        textFont(bitPotionFont);
+        allSprites.textSize = 16;
+    }
 
     PlayerSprite.w = 20;
     PlayerSprite.h = 39;
@@ -728,6 +786,7 @@ function Player_Retry(){
     Skull.rotationSpeed = 0;
     Skull.rotation = 0;
     TutorialSetup()
+
     StartGem.visible = true
     Shine1.visible = true
 }
@@ -753,6 +812,7 @@ function draw() {
 
     // Score Text Update
     ScoreText2.text = Score
+    GemText2.text = GemCount
 
     //Tutorial Text Update
     if (RoundPhrase == 1){
@@ -954,6 +1014,17 @@ function draw() {
             StartFrame.x = frameCount
         }
 
+        // Gem Collect Detection
+        if (contro.presses('b') && PlayerSprite.overlapping(Gems) && Dead == false && !Paused){          
+            for (let i = 0; i < Gems.length; i++) {
+                if (PlayerSprite.overlapping(Gems[i]) && Gems[i] != StartGem){
+                    Gems[i].remove()
+                    GemShines[i].remove()
+                    collectGem()
+                }
+            }
+        }
+
         // Retry Button
         if (Dead == true && contro.presses('b')){
             Player_Retry()
@@ -989,6 +1060,11 @@ function draw() {
             PauseFrameStart.x = 0
             PauseFrameEnd.x = 0
         }
+    }
+
+    // Gem Spawning
+    if (Game_Start == true && Gems.length == 1 && RoundPhrase >= 6) {  
+        spawnGem()  
     }
 
     // Round Loops
@@ -1080,6 +1156,7 @@ function draw() {
 
         if (Fireballs.overlaps(Bats[i])){
             Bats[i].remove()
+            Score = Score + 5
         }                  
     }
 
@@ -1104,6 +1181,10 @@ function draw() {
     PauseText2.visible = false;
     ScoreText.visible = false;
     ScoreText2.visible = false;
+    GemText.visible = false;
+    GemText2.visible = false;
+    ArrowL.visible = false;
+    ArrowR.visible = false;
     allSprites.draw();
 
     // draw ui text
@@ -1113,12 +1194,23 @@ function draw() {
     PauseButtonText.draw();
     ScoreText.draw();
     ScoreText2.draw();
+    GemText.draw();
+    GemText2.draw();
 
     if (Paused){
         PauseOverlay.draw();
         PauseOverlay.draw();
         PauseText.draw();
         PauseText2.draw();
+    }
+
+    // Arrow Indicator Update
+    if (Game_Start == true && Gems.length > 1 && RoundPhrase >= 6) {  
+        if ((Gems[1].x - PlayerSprite.x) < 0){
+            ArrowL.draw()
+        } else{
+            ArrowR.draw()
+        }
     }
 }
 
@@ -1186,7 +1278,7 @@ function doIce(){
 }
 
 function doBatL(){
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 2; i++) {
         let Bat = new Bats.Sprite()
         Bat.addAnimation("BatAnim", BatAnim);
         Bat.animation.play()
@@ -1194,7 +1286,7 @@ function doBatL(){
 }
 
 function doBatR(){
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 2; i++) {
         let Bat = new Bats.Sprite()
         Bat.addAnimation("BatAnim", BatAnim);
         Bat.x = random(-500,-300)
