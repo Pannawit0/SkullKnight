@@ -24,10 +24,11 @@ break: change rooms and require the player shoot something to progress
  round 5: combine (greater intensity)
  etc.
  
-- [ ] try using a 8-bit or 16 bit font that can look more clear without increasing font size
-
-- [ ] Add screenshots and describe the game in README.md
-
+- [X] try using a 8-bit or 16 bit font that can look more clear without increasing font size (only works on macos right now)
 - [X] pause menu! make screen dark except for pause menu text (add stick sensitvity settings if you want)
-- [ ] add d-pad input option for controllers without sticks
-- [ ] add more jewels (have to get all jewels before leaving + defeat enemy rounds)
+- [X] add more jewels (have to get all jewels before leaving + defeat enemy rounds)
+
+- [ ] Add screenshots, and the link to video, and describe the game in README.md
+- [ ] option to skip the tutorial, or if they complete and die then it would auto-skip it
+- [ ] title screen!
+- [ ] fix bug where jewels can spawn in the same place or very close to each other
